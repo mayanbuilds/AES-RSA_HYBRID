@@ -1,0 +1,6 @@
+{
+  "name": "Assignment 2 - Using Standard Cryptographic APIs (AES and RSA)",
+  "description": "Interactive educational laboratory for Information Security Programming demonstrating AES-GCM, RSA-OAEP, hybrid cryptosystems, automated crypto test suites, and academic report generation with the Web Crypto API.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

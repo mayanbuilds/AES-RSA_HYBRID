@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AES-RSA-Hybrid</title>
+    <meta name="description" content="Interactive educational laboratory for Information Security Programming demonstrating AES-GCM, RSA-OAEP, hybrid cryptosystems, automated crypto test suites, and academic report generation with the Web Crypto API." />
+    <meta property="og:title" content="Assignment 2 - Using Standard Cryptographic APIs (AES and RSA)" />
+    <meta property="og:description" content="Interactive educational laboratory for Information Security Programming demonstrating AES-GCM, RSA-OAEP, hybrid cryptosystems, automated crypto test suites, and academic report generation with the Web Crypto API." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M32 6L10 15v18c0 13 9.5 24.5 22 28 12.5-3.5 22-15 22-28V15L32 6z' fill='rgba(255,255,255,0.15)' stroke='rgba(255,255,255,0.6)' stroke-width='1.5'/%3E%3Crect x='21' y='31' width='22' height='17' rx='3.5' fill='white'/%3E%3Cpath d='M25 31v-6c0-3.9 3.1-7 7-7s7 3.1 7 7v6' stroke='white' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='32' cy='38' r='2.5' fill='%234f46e5'/%3E%3Crect x='30.5' y='38' width='3' height='5' rx='1.5' fill='%234f46e5'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Full-Width Header -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="header-brand">
+          <!-- Cryptography Logo SVG -->
+          <div class="header-logo" aria-hidden="true">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Outer shield -->
+              <path d="M26 3L6 11V26C6 36.5 15 45.5 26 49C37 45.5 46 36.5 46 26V11L26 3Z" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+              <!-- Lock body -->
+              <rect x="17" y="24" width="18" height="14" rx="3" fill="rgba(255,255,255,0.9)"/>
+              <!-- Lock shackle -->
+              <path d="M20 24V19.5C20 16.46 23 14 26 14C29 14 32 16.46 32 19.5V24" stroke="rgba(255,255,255,0.9)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <!-- Keyhole -->
+              <circle cx="26" cy="30" r="2.2" fill="#4f46e5"/>
+              <rect x="25" y="30" width="2" height="4" rx="1" fill="#4f46e5"/>
+              <!-- Small circuit dots for "crypto" feel -->
+              <circle cx="10" cy="22" r="1.5" fill="rgba(255,255,255,0.5)"/>
+              <circle cx="42" cy="22" r="1.5" fill="rgba(255,255,255,0.5)"/>
+              <circle cx="10" cy="30" r="1.5" fill="rgba(255,255,255,0.35)"/>
+              <circle cx="42" cy="30" r="1.5" fill="rgba(255,255,255,0.35)"/>
+            </svg>
+          </div>
+          <div class="header-text">
+            <h1 class="header-title">Cryptography Lab</h1>
+            <p class="header-subtitle">Information Security Programming &ndash; Assignment 2: AES &amp; RSA</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <span class="header-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-1px;margin-right:4px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            Web Crypto API
+          </span>
+          <span class="header-badge header-badge-secure">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M12 2L4 6v6c0 5.5 3.5 10.7 8 12 4.5-1.3 8-6.5 8-12V6L12 2z"/></svg>
+            Secure Context
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- Web Crypto Availability Warning Banner -->
+      <div id="env-warning" class="env-warning" style="display: none;" role="alert">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span>Web Crypto is unavailable. Open this page over https:// or localhost.</span>
+      </div>
+
+      <!-- Navigation & Global Controls -->
+      <div class="tab-nav-wrapper">
+        <div class="tab-list" role="tablist" aria-label="Cryptography modules">
+          <button id="tab-aes" class="tab-btn" role="tab" aria-selected="true" aria-controls="tabpanel-aes" tabindex="0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            AES
+          </button>
+          <button id="tab-rsa" class="tab-btn" role="tab" aria-selected="false" aria-controls="tabpanel-rsa" tabindex="-1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            RSA
+          </button>
+          <button id="tab-hybrid" class="tab-btn" role="tab" aria-selected="false" aria-controls="tabpanel-hybrid" tabindex="-1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2h4"/><path d="M12 14v-4"/><path d="M4 13.4A10 10 0 0 0 12 22a10 10 0 0 0 8-4"/><path d="M4 11a10 10 0 0 1 8-9"/><path d="M20 11a10 10 0 0 0-4-7.4"/></svg>
+            Hybrid
+          </button>
+          <button id="tab-tests" class="tab-btn" role="tab" aria-selected="false" aria-controls="tabpanel-tests" tabindex="-1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Tests
+          </button>
+          <button id="tab-report" class="tab-btn" role="tab" aria-selected="false" aria-controls="tabpanel-report" tabindex="-1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Report
+          </button>
+        </div>
+        <button id="btn-reset-all" class="btn btn-rose btn-sm" type="button" title="Clear all generated keys, outputs, and status logs">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Reset all
+        </button>
+      </div>
+
+      <!-- ====================================================================
+           PART A: AES TAB PANEL
+           ==================================================================== -->
+      <section id="tabpanel-aes" class="tab-panel" role="tabpanel" aria-labelledby="tab-aes">
+        <!-- Explanation Card -->
+        <div class="card explanation-card">
+          <p>This module demonstrates symmetric encryption using AES-GCM (Galois/Counter Mode). AES-GCM provides authenticated encryption, guaranteeing both secrecy (confidentiality) and protection against tampering (integrity). A single shared key encrypts and decrypts the data along with a fresh initialization vector (IV) generated for every operation. If even a single bit of the ciphertext or IV is altered, decryption immediately fails.</p>
+        </div>
+
+        <div class="demo-warning">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span>For demonstration only. Real systems must NEVER log or expose key material like this.</span>
+        </div>
+
+        <!-- Key Generation Card -->
+        <div class="card">
+          <h2 class="card-title">1. Generate AES Symmetric Key</h2>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="aes-key-size" class="form-label">Key Size</label>
+              <select id="aes-key-size" class="form-select">
+                <option value="256" selected>256-bit (AES-256-GCM - Recommended)</option>
+                <option value="128">128-bit (AES-128-GCM)</option>
+              </select>
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+              <button id="btn-aes-genkey" class="btn btn-indigo" type="button">Generate AES Key</button>
+            </div>
+          </div>
+
+          <div class="code-box">
+            <div class="code-box-header">
+              <span class="code-box-title" id="aes-key-label">AES Key (Hex) &ndash; No key generated yet</span>
+              <div class="code-box-actions">
+                <button class="btn btn-slate btn-sm btn-copy" data-target="aes-key-hex" type="button">Copy</button>
+              </div>
+            </div>
+            <textarea id="aes-key-hex" class="code-output" readonly placeholder="Click 'Generate AES Key' to create a key in memory..."></textarea>
+          </div>
+        </div>
+
+        <!-- Encryption / Decryption Card -->
+        <div class="card">
+          <h2 class="card-title">2. Encryption &amp; Tamper Verification</h2>
+          <div class="form-group">
+            <label for="aes-plaintext" class="form-label">
+              <span>Plaintext</span>
+              <span id="aes-plaintext-len" class="form-label-meta">104 bytes</span>
+            </label>
+            <textarea id="aes-plaintext" class="form-textarea" rows="3">Information security protects data from unauthorized access, and encryption is one of its most important tools.</textarea>
+          </div>
+
+          <div class="btn-group">
+            <button id="btn-aes-encrypt" class="btn btn-mint" type="button">Encrypt</button>
+            <button id="btn-aes-decrypt" class="btn btn-sky" type="button">Decrypt</button>
+            <button id="btn-aes-clear" class="btn btn-slate" type="button">Clear</button>
+          </div>
+
+          <div id="aes-breakdown" class="form-label-meta" style="margin: 0.5rem 0 1rem 0; font-weight: 600; color: var(--primary-text);"></div>
+
+          <div class="grid-2">
+            <div class="code-box">
+              <div class="code-box-header">
+                <span class="code-box-title">Initialization Vector (IV) &ndash; 12 bytes Hex (Editable)</span>
+                <div class="code-box-actions">
+                  <button class="btn btn-slate btn-sm btn-copy" data-target="aes-iv-hex" type="button">Copy</button>
+                </div>
+              </div>
+              <textarea id="aes-iv-hex" class="code-output editable" rows="2" placeholder="IV will appear here after encryption..."></textarea>
+            </div>
+
+            <div class="code-box">
+              <div class="code-box-header">
+                <span class="code-box-title">Ciphertext + 16B Tag (Base64)</span>
+                <div class="code-box-actions">
+                  <button class="btn btn-slate btn-sm btn-copy" data-target="aes-ciphertext-b64" type="button">Copy</button>
+                </div>
+              </div>
+              <textarea id="aes-ciphertext-b64" class="code-output" readonly rows="2" placeholder="Base64 ciphertext..."></textarea>
+            </div>
+          </div>
+
+          <div class="code-box">
+            <div class="code-box-header">
+              <span class="code-box-title">Ciphertext + 16B Tag (Hex &ndash; Editable to simulate tampering)</span>
+              <div class="code-box-actions">
+                <button class="btn btn-slate btn-sm btn-copy" data-target="aes-ciphertext-hex" type="button">Copy</button>
+              </div>
+            </div>
+            <textarea id="aes-ciphertext-hex" class="code-output editable" rows="3" placeholder="Ciphertext hex will appear here. Edit any character to test authentication failure..."></textarea>
+          </div>
+
+          <div class="code-box">
+            <div class="code-box-header">
+              <span class="code-box-title">Recovered Plaintext</span>
+              <div class="code-box-actions">
+                <span id="aes-match-badge" style="display: none;"></span>
+                <button class="btn btn-slate btn-sm btn-copy" data-target="aes-recovered" type="button">Copy</button>
+              </div>
+            </div>
+            <textarea id="aes-recovered" class="code-output" readonly rows="2" placeholder="Recovered plaintext will appear here upon decryption..."></textarea>
+          </div>
+
+          <div id="aes-status" class="status-banner" role="status"></div>
+        </div>
+
+        <div class="info-box">
+          <h4>Understanding AES-GCM Authenticated Encryption:</h4>
+          <p><strong>Symmetric Key:</strong> Both parties share the same secret key. AES is fast and suitable for bulk data.<br/>
+          <strong>Galois/Counter Mode (GCM):</strong> Unlike older block cipher modes (like ECB or CBC), GCM computes a 16-byte cryptographic authentication tag alongside the ciphertext. Decryption will verify this tag mathematically before releasing any plaintext.<br/>
+          <strong>Initialization Vector (IV):</strong> A 12-byte nonce (number used once) must be uniquely randomized for every message under the same key. The IV does not need to be secret and is sent in plaintext alongside the ciphertext.</p>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           PART B: RSA TAB PANEL
+           ==================================================================== -->
+      <section id="tabpanel-rsa" class="tab-panel" role="tabpanel" aria-labelledby="tab-rsa" hidden>
+        <!-- Explanation Card -->
+        <div class="card explanation-card">
+          <p>This module demonstrates asymmetric encryption using RSA-OAEP (Optimal Asymmetric Encryption Padding) with a 2048-bit modulus and SHA-256 hash. In public-key cryptography, anyone can encrypt using the public key, but only the holder of the private key can decrypt. Due to mathematical constraints and OAEP padding overhead, RSA cannot encrypt arbitrary bulk data and is strictly capped at 190 bytes.</p>
+        </div>
+
+        <!-- Key Generation Card -->
+        <div class="card">
+          <h2 class="card-title">1. Generate RSA-2048 Key Pair</h2>
+          <div class="btn-group">
+            <button id="btn-rsa-genkey" class="btn btn-indigo" type="button">Generate RSA Key Pair</button>
+          </div>
+
+          <div class="grid-2">
+            <div class="code-box">
+              <div class="code-box-header">
+                <div class="format-badge-group">
+                  <span class="badge badge-spki">SPKI</span>
+                  <span class="badge badge-public">PUBLIC CONTAINER</span>
+                  <span class="code-box-title" style="margin-left: 0.3rem;">PUBLIC KEY</span>
+                </div>
+                <div class="code-box-actions">
+                  <button class="btn btn-slate btn-sm btn-copy" data-target="rsa-pubkey-pem" type="button">Copy</button>
+                </div>
+              </div>
+              <textarea id="rsa-pubkey-pem" class="code-output" readonly rows="6" placeholder="Public key PEM will appear here..."></textarea>
+            </div>
+
+            <div class="code-box">
+              <div class="code-box-header">
+                <div class="format-badge-group">
+                  <span class="badge badge-pkcs8">PKCS#8</span>
+                  <span class="badge badge-private">PRIVATE CONTAINER</span>
+                  <span class="code-box-title" style="margin-left: 0.3rem;">PRIVATE KEY</span>
+                </div>
+                <div class="code-box-actions">
+                  <button class="btn btn-slate btn-sm btn-copy" data-target="rsa-privkey-pem" type="button">Copy</button>
+                </div>
+              </div>
+              <textarea id="rsa-privkey-pem" class="code-output" readonly rows="6" placeholder="Private key PEM will appear here..."></textarea>
+            </div>
+          </div>
+
+          <div class="demo-warning">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>Never share a private key. Shown here for demonstration only.</span>
+          </div>
+        </div>
+
+        <!-- Encryption / Decryption Card -->
+        <div class="card">
+          <h2 class="card-title">2. Asymmetric Encryption &amp; Payload Limit</h2>
+          <div class="form-group">
+            <label for="rsa-message" class="form-label">
+              <span>Short message (Max 190 bytes)</span>
+              <span id="rsa-msg-len" class="form-label-meta">10 / 190 bytes</span>
+            </label>
+            <input id="rsa-message" class="form-control" type="text" value="Hello RSA!" />
+          </div>
+
+          <div class="btn-group">
+            <button id="btn-rsa-encrypt" class="btn btn-mint" type="button">Encrypt with Public Key</button>
+            <button id="btn-rsa-decrypt" class="btn btn-sky" type="button">Decrypt with Private Key</button>
+            <button id="btn-rsa-try-long" class="btn btn-amber" type="button">Try a long message (&gt;190 bytes)</button>
+            <button id="btn-rsa-clear" class="btn btn-slate" type="button">Clear</button>
+          </div>
+
+          <div id="rsa-ciphertext-meta" class="form-label-meta" style="margin: 0.5rem 0; font-weight: 600;"></div>
+
+          <div class="grid-2">
+            <div class="code-box">
+              <div class="code-box-header">
+                <span class="code-box-title">Ciphertext (Base64 &ndash; 256 bytes)</span>
+                <div class="code-box-actions">
+                  <button class="btn btn-slate btn-sm btn-copy" data-target="rsa-ciphertext-b64" type="button">Copy</button>
+                </div>
+              </div>
+              <textarea id="rsa-ciphertext-b64" class="code-output" readonly rows="3" placeholder="Ciphertext base64..."></textarea>
+            </div>
+
+            <div class="code-box">
+              <div class="code-box-header">
+                <span class="code-box-title">Ciphertext (Hex &ndash; 512 hex chars)</span>
+                <div class="code-box-actions">
+                  <button class="btn btn-slate btn-sm btn-copy" data-target="rsa-ciphertext-hex" type="button">Copy</button>
+                </div>
+              </div>
+              <textarea id="rsa-ciphertext-hex" class="code-output" readonly rows="3" placeholder="Ciphertext hex..."></textarea>
+            </div>
+          </div>
+
+          <div class="code-box">
+            <div class="code-box-header">
+              <span class="code-box-title">Recovered Plaintext</span>
+              <div class="code-box-actions">
+                <span id="rsa-match-badge" style="display: none;"></span>
+                <button class="btn btn-slate btn-sm btn-copy" data-target="rsa-recovered" type="button">Copy</button>
+              </div>
+            </div>
+            <textarea id="rsa-recovered" class="code-output" readonly rows="2" placeholder="Recovered text will appear here upon decryption..."></textarea>
+          </div>
+
+          <div id="rsa-status" class="status-banner" role="status"></div>
+        </div>
+
+        <div class="info-box">
+          <h4>Why RSA is only for small payloads:</h4>
+          <p><strong>Payload Limit Formula:</strong> For a 2048-bit modulus (256 bytes) using RSA-OAEP with SHA-256 (hash length hLen = 32 bytes), the maximum message size is:
+          <br/><code>max_bytes = k - 2*hLen - 2 = 256 - (2 * 32) - 2 = 190 bytes</code>.
+          <br/><strong>Performance &amp; Randomization:</strong> RSA modular exponentiation is hundreds of times slower than AES. Furthermore, OAEP padding adds randomized salt, meaning encrypting the exact same message twice generates completely different ciphertexts. Real systems use RSA solely to exchange small secret session keys, giving rise to hybrid cryptosystems (Part C).</p>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           PART C: HYBRID CRYPTOSYSTEM TAB PANEL
+           ==================================================================== -->
+      <section id="tabpanel-hybrid" class="tab-panel" role="tabpanel" aria-labelledby="tab-hybrid" hidden>
+        <!-- Explanation Card -->
+        <div class="card explanation-card">
+          <p>This module implements a minimal hybrid cryptosystem combining the speed of AES-256-GCM symmetric encryption with the key-exchange capability of RSA-2048-OAEP. The sender generates a one-time session key, encrypts arbitrary-sized payload data with AES-GCM, and encrypts only the 32-byte session key with the receiver's RSA public key. The receiver decrypts the session key using their private key and subsequently decrypts the payload.</p>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Hybrid Encryption Simulator</h2>
+          <div class="form-group">
+            <label for="hybrid-message" class="form-label">
+              <span>Payload Message (Bulk Data)</span>
+              <span id="hybrid-msg-len" class="form-label-meta">462 bytes</span>
+            </label>
+            <textarea id="hybrid-message" class="form-textarea" rows="4">A hybrid cryptosystem solves the fundamental trade-off in cryptography: symmetric ciphers like AES are lightning-fast and support unlimited data sizes, but require a shared secret. Asymmetric ciphers like RSA solve key distribution without prior secrets, but are computationally slow and mathematically capped at 190 bytes. By combining both, we encrypt the large message with a fast one-time AES key and seal that small key inside RSA.</textarea>
+          </div>
+
+          <div id="hybrid-limit-note" class="form-label-meta" style="margin-bottom: 0.75rem; font-weight: 600; color: var(--primary-text);">
+            Message size: 462 bytes. RSA-OAEP limit: 190 bytes. RSA alone cannot encrypt this message, so we use hybrid encryption.
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="hybrid-tamper" class="form-label">Simulate tampering (optional)</label>
+              <select id="hybrid-tamper" class="form-select">
+                <option value="none" selected>None (Clean transmission)</option>
+                <option value="ciphertext">Modify the ciphertext (flip one bit)</option>
+                <option value="key">Modify the encrypted AES key (flip one bit)</option>
+                <option value="iv">Modify the IV (flip one bit)</option>
+              </select>
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end; gap: 0.5rem;">
+              <button id="btn-hybrid-run" class="btn btn-primary" style="flex: 2;" type="button">Run Hybrid Demo</button>
+              <button id="btn-hybrid-clear" class="btn btn-slate" style="flex: 1;" type="button">Clear</button>
+            </div>
+          </div>
+
+          <div id="hybrid-status" class="status-banner" role="status"></div>
+
+          <!-- Summary card (appears after run) -->
+          <div id="hybrid-summary-card" class="summary-card" style="display: none;">
+            <div class="card-title" style="margin: 0; color: #15803d; font-size: 1rem;">Transmission Package Summary</div>
+            <div class="summary-grid">
+              <div class="summary-item">
+                <div class="summary-label">Plaintext Size</div>
+                <div id="sum-plaintext-bytes" class="summary-val">0 B</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-label">AES Ciphertext</div>
+                <div id="sum-ciphertext-bytes" class="summary-val">0 B</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-label">Encrypted Key</div>
+                <div id="sum-enckey-bytes" class="summary-val">256 B</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-label">Total Transmitted</div>
+                <div id="sum-total-bytes" class="summary-val">0 B</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Numbered Step-by-Step Log -->
+          <div id="hybrid-log" class="hybrid-log"></div>
+        </div>
+
+        <div class="info-box">
+          <h4>How This Mirrors Real-World Security (TLS):</h4>
+          <p>This mirrors the idea behind Transport Layer Security (TLS): slow asymmetric cryptography protects a small session key and fast symmetric encryption protects the bulk data. (Modern TLS 1.3 negotiates that key with ephemeral Diffie-Hellman instead of encrypting it with RSA, but the hybrid principle is the same.)</p>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           TESTS TAB PANEL
+           ==================================================================== -->
+      <section id="tabpanel-tests" class="tab-panel" role="tabpanel" aria-labelledby="tab-tests" hidden>
+        <!-- Explanation Card -->
+        <div class="card explanation-card">
+          <p>This module provides an automated test suite verifying all cryptographic primitives, data encoding round trips, padding boundaries, tampered bit detection, and edge cases against real Web Crypto API calls. All tests run in isolated memory without modifying your active keys from Parts A, B, or C.</p>
+        </div>
+
+        <div class="card">
+          <div class="test-summary-bar">
+            <div>
+              <button id="btn-run-tests" class="btn btn-primary" type="button">Run All Tests</button>
+            </div>
+            <div id="test-summary-counts" class="test-count-text">Tests not executed yet</div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="test-table" aria-label="Cryptographic automated test results">
+              <thead>
+                <tr>
+                  <th style="width: 45px;">#</th>
+                  <th>Test Description</th>
+                  <th>Expected</th>
+                  <th>Actual</th>
+                  <th style="width: 90px;">Result</th>
+                </tr>
+              </thead>
+              <tbody id="test-results-body">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                    Click "Run All Tests" above to execute all 19 automated cryptographic verification tests.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           REPORT TAB PANEL
+           ==================================================================== -->
+      <section id="tabpanel-report" class="tab-panel" role="tabpanel" aria-labelledby="tab-report" hidden>
+        <!-- Explanation Card -->
+        <div class="card explanation-card">
+          <p>Generate a complete, professionally formatted lab report suitable for academic submission. The generator pulls live results, key metrics, and unit test outputs directly from your session. You can customize student details, include or exclude demo key material, and export the report as HTML, Markdown, or print it directly to PDF.</p>
+        </div>
+
+        <!-- Configuration Card -->
+        <div class="card no-print">
+          <h2 class="card-title">Report Metadata &amp; Options</h2>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="rep-student" class="form-label">Student Name</label>
+              <input id="rep-student" class="form-control" type="text" value="Muhammad Ayan" />
+            </div>
+            <div class="form-group">
+              <label for="rep-dept" class="form-label">University / Department</label>
+              <input id="rep-dept" class="form-control" type="text" value="University of Balochistan - Department of Computer Science" />
+            </div>
+            <div class="form-group">
+              <label for="rep-course" class="form-label">Course</label>
+              <input id="rep-course" class="form-control" type="text" value="Information Security Programming" />
+            </div>
+            <div class="form-group">
+              <label for="rep-instructor" class="form-label">Instructor</label>
+              <input id="rep-instructor" class="form-control" type="text" value="Dr. Ihsan Ullah" />
+            </div>
+            <div class="form-group">
+              <label for="rep-title" class="form-label">Assignment Title</label>
+              <input id="rep-title" class="form-control" type="text" value="Assignment 2 - Using Standard Cryptographic APIs (AES and RSA)" />
+            </div>
+            <div class="form-group">
+              <label for="rep-date" class="form-label">Submission Date</label>
+              <input id="rep-date" class="form-control" type="text" />
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer;">
+              <input id="rep-include-demo-vals" type="checkbox" checked />
+              <span>Include demo values from my last runs (AES key, IV, ciphertext, public key) &ndash; Private keys are NEVER included</span>
+            </label>
+          </div>
+
+          <div class="btn-group">
+            <button id="btn-generate-report" class="btn btn-primary" type="button">Generate Report</button>
+            <button id="btn-download-html" class="btn btn-mint" type="button" disabled>Download report (.html)</button>
+            <button id="btn-download-md" class="btn btn-sky" type="button" disabled>Download report (.md)</button>
+            <button id="btn-copy-report" class="btn btn-slate" type="button" disabled>Copy report text</button>
+            <button id="btn-print-report" class="btn btn-indigo" type="button">Print / Save as PDF</button>
+          </div>
+        </div>
+
+        <!-- Key Container Reference Card with Visual Indicators -->
+        <div class="card key-container-card no-print">
+          <div class="card-header-flex">
+            <div>
+              <h2 class="card-title" style="margin: 0;">RSA Key Containers Reference: SPKI vs. PKCS#8</h2>
+              <p style="margin: 0.25rem 0 0 0; font-size: 0.88rem; color: var(--text-muted);">
+                Visual reference distinguishing public SubjectPublicKeyInfo (SPKI) from private PKCS#8 exported key envelopes.
+              </p>
+            </div>
+            <span class="badge badge-info">Container Anatomy</span>
+          </div>
+
+          <div class="grid-2" style="margin-top: 1rem;">
+            <!-- SPKI Column -->
+            <div class="key-format-card spki-format">
+              <div class="format-header">
+                <div class="format-badge-group">
+                  <span class="badge badge-spki">SPKI</span>
+                  <span class="badge badge-public">PUBLIC CONTAINER</span>
+                </div>
+                <span class="format-rfc">RFC 5280 / X.509</span>
+              </div>
+              <div class="format-anatomy">
+                <div class="anatomy-item"><strong>Format Role:</strong> Universal Public Key Container (X.509 Certificates)</div>
+                <div class="anatomy-item"><strong>PEM Header:</strong> <code>-----BEGIN PUBLIC KEY-----</code></div>
+                <div class="anatomy-item"><strong>Metadata:</strong> <code>AlgorithmIdentifier</code> OID (e.g. <code>rsaEncryption</code>)</div>
+                <div class="anatomy-item"><strong>Payload:</strong> <code>BIT STRING</code> encloses raw <code>RSAPublicKey</code> (Modulus <em>n</em>, Exponent <em>e</em>)</div>
+                <div class="anatomy-item"><strong>Security:</strong> Non-sensitive. Safe for public distribution and TLS certificates.</div>
+              </div>
+              <div class="code-box" style="margin-top: 0.75rem; margin-bottom: 0;">
+                <div class="code-box-header">
+                  <span class="code-box-title">Active SPKI PEM Output</span>
+                  <div class="code-box-actions">
+                    <button class="btn btn-slate btn-sm btn-copy" data-target="rep-spki-preview" type="button">Copy</button>
+                  </div>
+                </div>
+                <textarea id="rep-spki-preview" class="code-output" readonly rows="5" placeholder="Generate an RSA key pair in Part B to preview SPKI format here..."></textarea>
+              </div>
+            </div>
+
+            <!-- PKCS#8 Column -->
+            <div class="key-format-card pkcs8-format">
+              <div class="format-header">
+                <div class="format-badge-group">
+                  <span class="badge badge-pkcs8">PKCS#8</span>
+                  <span class="badge badge-private">PRIVATE CONTAINER</span>
+                </div>
+                <span class="format-rfc">RFC 5208 / RFC 5958</span>
+              </div>
+              <div class="format-anatomy">
+                <div class="anatomy-item"><strong>Format Role:</strong> Standard Private Key Container (Algorithm-Independent)</div>
+                <div class="anatomy-item"><strong>PEM Header:</strong> <code>-----BEGIN PRIVATE KEY-----</code></div>
+                <div class="anatomy-item"><strong>Metadata:</strong> Version <code>INTEGER (0)</code> + <code>AlgorithmIdentifier</code> OID</div>
+                <div class="anatomy-item"><strong>Payload:</strong> <code>OCTET STRING</code> encloses full <code>RSAPrivateKey</code> (<em>n, e, d, p, q, dP, dQ, qInv</em>)</div>
+                <div class="anatomy-item"><strong>Security:</strong> High Sensitivity / Secret. Supports optional encryption on disk.</div>
+              </div>
+              <div class="code-box" style="margin-top: 0.75rem; margin-bottom: 0;">
+                <div class="code-box-header">
+                  <span class="code-box-title">Active PKCS#8 PEM Output (Demo Only)</span>
+                  <div class="code-box-actions">
+                    <button class="btn btn-slate btn-sm btn-copy" data-target="rep-pkcs8-preview" type="button">Copy</button>
+                  </div>
+                </div>
+                <textarea id="rep-pkcs8-preview" class="code-output" readonly rows="5" placeholder="Generate an RSA key pair in Part B to preview PKCS#8 format here..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Screenshot checklist -->
+        <div class="screenshot-checklist no-print">
+          <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem; color: #1e3a8a;">Screenshot Submission Checklist</h3>
+          <p style="margin: 0; font-size: 0.88rem; color: var(--text-muted);">Ensure you take screenshots of each module before completing your report:</p>
+          <ul class="checklist-items">
+            <li><span class="checklist-box" aria-hidden="true"></span> Part A: AES encryption &amp; decryption success showing "MATCHES ORIGINAL"</li>
+            <li><span class="checklist-box" aria-hidden="true"></span> Part A: Tampered ciphertext or IV showing authentication failure message</li>
+            <li><span class="checklist-box" aria-hidden="true"></span> Part B: RSA-2048 key pair generation and successful short message decryption</li>
+            <li><span class="checklist-box" aria-hidden="true"></span> Part B: "Try a long message" error triggering the 190-byte limit warning</li>
+            <li><span class="checklist-box" aria-hidden="true"></span> Part C: Clean hybrid run showing all 8 steps marked OK with summary card</li>
+            <li><span class="checklist-box" aria-hidden="true"></span> Part C: Simulated tampering run detecting bit alteration in ciphertext/key</li>
+            <li><span class="checklist-box" aria-hidden="true"></span> Tests Tab: All 19 automated verification tests showing green "PASS"</li>
+          </ul>
+        </div>
+
+        <!-- Report Presentation Paper -->
+        <article id="report-paper" class="report-paper" style="display: none;" aria-label="Generated academic report">
+          <!-- Dynamic report content populated by script.js -->
+        </article>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M26 3L6 11V26C6 36.5 15 45.5 26 49C37 45.5 46 36.5 46 26V11L26 3Z" fill="none" stroke="currentColor" stroke-width="2"/>
+            <rect x="17" y="24" width="18" height="14" rx="3" fill="currentColor" opacity="0.7"/>
+            <path d="M20 24V19.5C20 16.46 23 14 26 14C29 14 32 16.46 32 19.5V24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="footer-text">
+          <span class="footer-name">Muhammad Ayan</span>
+          <span class="footer-sep">·</span>
+          <span>University of Balochistan</span>
+          <span class="footer-sep">·</span>
+          <span>Instructor: Dr. Ihsan Ullah</span>
+        </div>
+        <div class="footer-pills">
+          <span class="footer-pill">AES-GCM</span>
+          <span class="footer-pill">RSA-OAEP</span>
+          <span class="footer-pill">Hybrid</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Vanilla Script (Pure Client Side, No external dependencies) -->
+    <script src="script.js"></script>
+  </body>
+</html>
